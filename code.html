@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Большое повторение (Модифицированное)</title>
+<style>
+  :root {
+    --bg: #fff6e9; --ink: #1f1b2e; --muted: #6b6680; --soft: #f3ece0; --card: #fff;
+    --primary: #6c5ce7; --ok: #2fb36d; --bad: #e5484d; --y: #ffc93c; --b: #4d96ff;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg) radial-gradient(circle at 1px 1px, rgba(31,27,46,.07) 1.5px, transparent 0) 0 0 / 22px 22px; color: var(--ink); min-height: 100vh; }
+  button, input { font: inherit; color: inherit; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 20px 60px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  header .chip { font-weight: 800; padding: 6px 14px; border: 3px solid var(--ink); border-radius: 999px; background: var(--y); box-shadow: 3px 3px 0 var(--ink); }
+  header .grow { flex: 1; }
+  header .stat { font: 700 18px var(--mono); background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 4px 12px; }
+  .progress { height: 10px; background: #fff; border: 2px solid var(--ink); border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
+  .progress div { height: 100%; background: var(--primary); transition: width .3s; }
+  .card { background: var(--card); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 5px 5px 0 var(--ink); padding: 24px 28px; }
+  h1 { font-size: 40px; margin: 0 0 12px; font-weight: 900; }
+  h2 { font-size: 26px; margin: 0 0 14px; line-height: 1.3; }
+  p, li { font-size: 18px; line-height: 1.5; }
+  .muted { color: var(--muted); }
+  code { font-family: var(--mono); background: rgba(31,27,46,.08); padding: 1px 6px; border-radius: 6px; font-size: .92em; }
+  pre.code { font: 16px/1.55 var(--mono); background: #1f1b2e; color: #f4f0ff; border-radius: 12px; padding: 12px 16px; white-space: pre; overflow-x: auto; margin: 10px 0; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; box-shadow: 3px 3px 0 var(--ink); font-weight: 800; cursor: pointer; font-size: 17px; }
+  .btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn.primary { background: var(--primary); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .actions { display: flex; gap: 12px; margin-top: 20px; align-items: center; }
+  .opt { display: block; width: 100%; text-align: left; margin: 8px 0; padding: 12px 16px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; cursor: pointer; font-size: 18px; }
+  .opt.sel { background: #ece9ff; }
+  .opt.right { background: #dff7ea; border-color: var(--ok); }
+  .opt.wrong { background: #ffe5e5; border-color: var(--bad); }
+  input.num, input.name { font: 700 22px var(--mono); padding: 10px 14px; border: 3px solid var(--ink); border-radius: 12px; width: 280px; }
+  input.name { font-family: inherit; width: 100%; max-width: 420px; }
+  .hint { background: #fff3c4; border: 2px dashed var(--ink); border-radius: 12px; padding: 10px 14px; margin-top: 12px; font-size: 17px; }
+  .fb { margin-top: 16px; padding: 14px 18px; border-radius: 12px; border: 3px solid; font-size: 17px; line-height: 1.5; }
+  .fb.ok { background: #dff7ea; border-color: var(--ok); }
+  .fb.no { background: #ffe5e5; border-color: var(--bad); }
+  .fb.neutral { background: var(--soft); border-color: var(--muted); }
+  .ord-label { font-weight: 800; margin: 14px 0 6px; }
+  .ord-box { min-height: 52px; border: 3px dashed var(--ink); border-radius: 12px; padding: 8px; background: #fbf8ff; }
+  .ord-line { display: block; width: 100%; text-align: left; font: 15px/1.4 var(--mono); white-space: pre; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 6px 10px; margin: 4px 0; cursor: pointer; }
+  .ord-line:hover { background: #fff3c4; }
+  .ord-box .ord-line { background: #1f1b2e; color: #f4f0ff; }
+  .ord-box .ord-line:hover { background: #3a3352; }
+  .ord-box .ord-line .n { color: #8f88b0; margin-right: 10px; }
+  .lock .ord-line, .lock .opt { pointer-events: none; }
+  label.ctl { display: block; font-weight: 700; font-size: 18px; margin: 10px 0; }
+  label.ctl b { font-family: var(--mono); }
+  input[type=range] { width: 100%; accent-color: var(--primary); }
+  canvas { display: block; border: 3px solid var(--ink); border-radius: 12px; background: #fff; max-width: 100%; }
+  .canv-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .formula { font: 700 20px var(--mono); background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 10px 14px; margin-top: 8px; }
+  table.res { border-collapse: collapse; width: 100%; font-size: 18px; margin: 12px 0; }
+  table.res th, table.res td { border-bottom: 2px solid var(--soft); padding: 8px 10px; text-align: left; }
+  table.res th { background: #fff3c4; }
+  .codebox { font: 700 17px var(--mono); background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 12px; word-break: break-all; }
+  .rev { border-left: 6px solid var(--ok); background: #fff; padding: 10px 14px; margin: 10px 0; border-radius: 0 12px 12px 0; }
+  .rev.no { border-color: var(--bad); }
+  .rev p { margin: 4px 0; font-size: 16px; }
+  .big { font-size: 56px; font-weight: 900; margin: 6px 0; }
+  .secgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+  .secgrid div { background: #fff; border: 3px solid var(--ink); border-radius: 14px; padding: 12px; text-align: center; font-weight: 800; }
+  a { color: var(--primary); }
+  textarea { width: 100%; font: 15px var(--mono); border: 3px solid var(--ink); border-radius: 12px; padding: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+
+// ==========================================
+// ЗДЕСЬ НАХОДЯТСЯ ВСЕ ВОПРОСЫ.
+// Вы можете легко менять текст, цифры и ответы прямо здесь.
+// ==========================================
+const DATA = {
+  sections: { img: "🖼 Изображения", vid: "🎬 Видео", txt: "📝 Текст" },
+  questions: [
+    {
+      sec: "img", type: "num", pts: 2, text: "Сколько чисел (параметров) содержит тензор изображения размером 32×32 с 3 цветовыми каналами (RGB)?",
+      answer: 3072, explain: "32 × 32 × 3 = 3072. Это количество пикселей, умноженное на количество каналов."
+    },
+    {
+      sec: "img", type: "num", pts: 2, text: "Сколько обучаемых параметров содержит слой `nn.Linear(3072, 64)`?",
+      hint: "Формула: (вход * выход) + смещение (bias).",
+      answer: 196672, explain: "3072 × 64 = 196608 (веса) + 64 (смещения) = 196672. Смещение добавляется для каждого нейрона выходного слоя."
+    },
+    {
+      sec: "img", type: "num", pts: 2, text: "Сколько параметров у слоя `nn.Conv2d(1, 32, kernel_size=5)`?",
+      hint: "Формула: (входные_каналы * ядро * ядро * выходные_каналы) + выходные_каналы (bias).",
+      answer: 832, explain: "32 × 1 × 5 × 5 = 800 (веса) + 32 (bias) = 832. Bias добавляется для каждого из 32 фильтров."
+    },
+    {
+      sec: "img", type: "slider", widget: "padding", pts: 2, text: "Входное изображение 30×30, `Conv2d(kernel_size=4, stride=2)`. Подберите `padding`, чтобы на выходе было 15×15.",
+      explain: "Формула: ⌊(30 + 2·padding − 4) / 2⌋ + 1 = 15. Отсюда 26 + 2·padding = 28, значит padding = 1."
+    },
+    {
+      sec: "img", type: "slider", widget: "threshold", pts: 2, text: "Подберите порог бинаризации так, чтобы остался только полезный сигнал (светлая цифра), а серый шум исчез.",
+      explain: "Полезный сигнал имеет яркость ~160, а шум 50-90. Порог должен быть строго между ними (например, 100-150)."
+    },
+    {
+      sec: "img", type: "slider", widget: "lr", pts: 2, text: "Подберите learning rate так, чтобы loss плавно убывал и к 20-й эпохе стал близок к 0, не вызывая расходимости.",
+      explain: "При lr=0.05 множитель затухания (1 - 2*lr*100) равен 0, что дает стабильное и быстрое убывание loss без осцилляций."
+    },
+    {
+      sec: "img", type: "order", pts: 2, text: "Соберите правильный порядок шагов одного шага обучения в PyTorch.",
+      lines: ["for inputs, targets in loader:", "    pred = net(inputs)", "    loss = criterion(pred, targets)", "    optimizer.zero_grad()", "    loss.backward()", "    optimizer.step()"],
+      accept: [[0, 1, 2, 3, 4, 5]], extra: ["    loss.step()"],
+      explain: "Стандартный цикл: прямой проход, расчет loss, обнуление градиентов, backward, шаг оптимизатора."
+    },
+    {
+      sec: "img", type: "choice", pts: 1, text: "Какова форма выходного тензора после `Conv2d(1, 16, kernel_size=5, padding=2, stride=1)` для входа 1×64×64?",
+      options: ["(16, 60, 60)", "(16, 64, 64)", "(1, 16, 64)", "(16, 68, 68)"], correct: 1,
+      explain: "Размер выхода = (64 + 2*2 - 5)/1 + 1 = 64. Количество каналов равно количеству фильтров (16). Итог: (16, 64, 64)."
+    },
+    {
+      sec: "img", type: "choice", pts: 1, text: "В каком порядке OpenCV хранит цветовые каналы при чтении изображения?",
+      options: ["RGB", "BGR", "HSV", "Grayscale"], correct: 1,
+      explain: "OpenCV исторически использует формат BGR (Blue, Green, Red), в отличие от большинства других библиотек."
+    },
+    {
+      sec: "img", type: "choice", pts: 1, text: "Точность на train 0.95, на val 0.60, val loss растет после 5 эпохи. Что это?",
+      options: ["Недообучение (Underfitting)", "Переобучение (Overfitting)", "Идеальная сходимость", "Слишком высокий learning rate"], correct: 1,
+      explain: "Классический признак переобучения: модель запоминает train-данные (высокая точность), но плохо обобщает на val (низкая точность, растущий loss)."
+    },
+    {
+      sec: "vid", type: "num", pts: 2, text: "Сколько кадров содержит видеоролик длительностью 5 минут при частоте 24 FPS?",
+      answer: 7200, explain: "5 минут × 60 секунд × 24 кадра/сек = 7200 кадров."
+    },
+    {
+      sec: "vid", type: "num", pts: 2, text: "Сколько мегабайт (МБ) в секунду занимает несжатое видео 1920×1080, 3 байта на пиксель, 24 FPS? (Округлите до десятых)",
+      answer: 149.3, tol: 0.5, unit: "МБ",
+      explain: "1920 × 1080 × 3 × 24 = 149 299 200 байт/сек. Делим на 1 000 000 = ~149.3 МБ/сек."
+    },
+    {
+      sec: "vid", type: "choice", pts: 1, text: "Какой метод OpenCV используется для перевода изображения в оттенки серого?",
+      options: ["cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)", "cv2.rgb2gray(img)", "cv2.grayscale(img)", "cv2.convertScaleAbs(img)"], correct: 0,
+      explain: "Правильный синтаксис OpenCV: cv2.cvtColor с флагом cv2.COLOR_BGR2GRAY."
+    },
+    {
+      sec: "vid", type: "num", pts: 2, text: "В OpenCV диапазон Hue (H) в HSV составляет 0-179. Какому значению H соответствует синий цвет (240° в стандартном 0-360°)?",
+      answer: 120, explain: "OpenCV делит стандартный угол на 2: 240 / 2 = 120."
+    },
+    {
+      sec: "vid", type: "slider", widget: "hsv", pts: 2, text: "Подберите диапазон H (Hue), чтобы выделить только синие объекты на кадре.",
+      explain: "Синий цвет в OpenCV HSV находится примерно в диапазоне 100-130. Зеленый ~40-80, Красный ~0-10 или 160-179."
+    },
+    {
+      sec: "vid", type: "order", pts: 2, text: "Соберите правильный цикл чтения и записи видео в OpenCV.",
+      lines: ["cap = cv2.VideoCapture('in.mp4')", "while True:", "    ret, frame = cap.read()", "    if not ret: break", "    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)", "    out.write(gray)", "cap.release()"],
+      accept: [[0, 1, 2, 3, 4, 5, 6]], extra: ["    frame = cap.read()"],
+      explain: "Создаем capture, читаем в цикле, проверяем ret, обрабатываем, пишем в output, освобождаем ресурсы."
+    },
+    {
+      sec: "vid", type: "choice", pts: 1, text: "`frame.shape` возвращает `(1080, 1920, 3)`. Какой аргумент `size` нужно передать в `cv2.VideoWriter`?",
+      options: ["(1080, 1920)", "(1920, 1080)", "(1080, 1920, 3)", "(3, 1920, 1080)"], correct: 1,
+      explain: "NumPy shape возвращает (height, width, channels), а VideoWriter ожидает кортеж (width, height)."
+    },
+    {
+      sec: "vid", type: "slider", widget: "haar", pts: 2, text: "Подберите `minNeighbors` так, чтобы отсеять ложные срабатывания, но оставить 2 реальных лица.",
+      explain: "При значении 5 или выше отсеиваются слабые детекции (шум), остаются только уверенные совпадения."
+    },
+    {
+      sec: "vid", type: "choice", pts: 1, text: "Как правильно вырезать область интереса (ROI) с координатами x, y, шириной w и высотой h?",
+      options: ["frame[x:x+w, y:y+h]", "frame[y:y+h, x:x+w]", "frame[w:h, x:y]", "frame[x:w, y:h]"], correct: 1,
+      explain: "В NumPy/OpenCV сначала идет ось Y (строки), затем ось X (столбцы): frame[y:y+h, x:x+w]."
+    },
+    {
+      sec: "vid", type: "choice", pts: 1, text: "Какое цветовое пространство лучше всего подходит для сегментации по цвету, так как отделяет яркость от цветности?",
+      options: ["RGB", "HSV или Lab", "Grayscale", "Binary"], correct: 1,
+      explain: "HSV и Lab разделяют информацию о цвете (Hue, a, b) и освещенности (Value, L), что делает их устойчивыми к теням."
+    },
+    {
+      sec: "txt", type: "num", pts: 2, text: "Сколько параметров содержит матрица эмбеддингов `nn.Embedding(8000, 256)`?",
+      answer: 2048000, explain: "Размер словаря (8000) умножается на размер вектора (256). 8000 × 256 = 2 048 000."
+    },
+    {
+      sec: "txt", type: "order", pts: 2, text: "Правильный порядок создания Bag-of-Words представления.",
+      lines: ["tokens = [tokenize(t) for t in texts]", "counts = Counter(w for t in tokens for w in t)", "vocab = {w: i+2 for i, (w, _) in enumerate(counts.most_common(5000))}", "X = [[vocab.get(w, 1) for w in t] for t in tokens]"],
+      accept: [[0, 1, 2, 3]], extra: ["X = train_test_split(tokens)"],
+      explain: "Токенизация -> подсчет частот -> создание словаря топ-N слов -> маппинг текста в индексы."
+    },
+    {
+      sec: "txt", type: "choice", pts: 1, text: "Что означает тег 'I' в разметке BIO для распознавания именованных сущностей?",
+      options: ["Independent (независимый токен)", "Inside (внутри сущности)", "Ignored (игнорируется)", "Initial (начальный)"], correct: 1,
+      explain: "B (Begin) - начало сущности, I (Inside) - продолжение сущности, O (Outside) - вне сущности."
+    },
+    {
+      sec: "txt", type: "num", pts: 2, text: "Модель нашла 10 объектов, из них 8 верных (TP). Всего в тексте 10 объектов. Чему равен F1-score?",
+      hint: "Precision = TP / (TP + FP), Recall = TP / (TP + FN), F1 = 2*P*R / (P + R)",
+      answer: 0.8, tol: 0.01, explain: "Precision = 8/10 = 0.8. Recall = 8/10 = 0.8. F1 = 2 * 0.8 * 0.8 / (0.8 + 0.8) = 0.8."
+    },
+    {
+      sec: "txt", type: "num", pts: 2, text: "Модель сделала 1000 предсказаний, 850 из них верны. Чему равна Accuracy?",
+      answer: 0.85, tol: 0.005, explain: "850 / 1000 = 0.85 (или 85%)."
+    },
+    {
+      sec: "txt", type: "num", pts: 2, text: "Рекуррентное обновление: `h = h * 0.2 + x * 0.8`. Начальное h=0. Входной вектор x = [5, 10, 0, 5]. Чему равно новое h? (введите числа через запятую, например 1,2,3,4)",
+      answer: 4, explain: "Попиксельно: 0*0.2 + 5*0.8 = 4; 0*0.2 + 10*0.8 = 8; 0; 4. Ответ: [4, 8, 0, 4].",
+      checkList: [4, 8, 0, 4]
+    },
+    {
+      sec: "txt", type: "num", pts: 2, text: "Сколько параметров у слоя `nn.LSTM(input_size=32, hidden_size=16)`?",
+      hint: "Формула LSTM: 4 * ((input + hidden) * hidden + hidden)",
+      answer: 3136, explain: "4 * ((32 + 16) * 16 + 16) = 4 * (48 * 16 + 16) = 4 * (768 + 16) = 4 * 784 = 3136."
+    },
+    {
+      sec: "txt", type: "choice", pts: 1, text: "`lstm = nn.LSTM(32, 50, batch_first=True)`. На вход подан тензор формы `(8, 20, 32)`. Какова форма выхода `out`?",
+      options: ["(20, 8, 50)", "(8, 20, 50)", "(8, 50, 20)", "(50, 8, 20)"], correct: 1,
+      explain: "При batch_first=True выход имеет форму (batch_size, seq_len, hidden_size), то есть (8, 20, 50)."
+    },
+    {
+      sec: "txt", type: "slider", widget: "temp", pts: 2, text: "Подберите температуру генерации так, чтобы вероятности слов 'же', 'ты', 'дела' стали примерно равными (около 33% каждое).",
+      explain: "При температуре около 1.0-1.2 экспонента сглаживает разницу в логитах, делая распределение более равномерным."
+    },
+    {
+      sec: "txt", type: "choice", pts: 1, text: "Какой специальный токен добавляется в начало последовательности при обучении авторегрессионной модели?",
+      options: ["<EOS> (End of Sequence)", "<BOS> (Begin of Sequence)", "<PAD>", "<UNK>"], correct: 1,
+      explain: "<BOS> сигнализирует модели о начале генерации или последовательности."
+    },
+    {
+      sec: "txt", type: "order", pts: 2, text: "Порядок шагов авторегрессионной генерации (декодера).",
+      lines: ["word, answer = BOS, []", "for _ in range(max_len):", "    out, state = model.decoder(model.emb(torch.tensor([[word]])), state)", "    word = int(model.head(out[0, -1]).argmax())", "    if word == EOS: break", "    answer.append(itos[word])"],
+      accept: [[0, 1, 2, 3, 4, 5]], extra: ["    state = None"],
+      explain: "Инициализация BOS -> цикл -> эмбеддинг и декодер -> выбор следующего слова по argmax -> проверка на EOS -> добавление в ответ."
+    }
+  ]
+};
+
+const QS = DATA.questions, SEC = DATA.sections, SEC_KEYS = Object.keys(SEC);
+const KEY = 'ml-review-v3-hidden', SALT = 'ithub-3p1-ml-v3', TEACHER = false;
+const app = document.getElementById('app');
+const MAX = QS.reduce((s, q) => s + (q.pts || 1), 0);
+
+// ---------- состояние ----------
+let S = load() || fresh();
+function fresh(attempt) {
+  return { name: '', start: 0, end: 0, idx: 0, answers: [], shownAt: {}, intro: {}, attempt: attempt || 1 };
+}
+function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+// ---------- утилиты ----------
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const md = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+const h = (tag, attrs = {}, html = '') => { const e = document.createElement(tag); Object.assign(e, attrs); if (html) e.innerHTML = html; return e; };
+function hash(s) { let x = 5381; for (const c of s + SALT) x = (Math.imul(x, 33) ^ c.charCodeAt(0)) >>> 0; return x.toString(36); }
+function rng(seed) { return () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }; }
+function shuffle(a, seed) { const r = rng(seed); a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const score = (filter = () => true) => S.answers.reduce((s, a, i) => s + (a && filter(QS[i]) && a.ok ? (QS[i].pts || 1) : 0), 0);
+const maxOf = sec => QS.filter(q => q.sec === sec).reduce((s, q) => s + (q.pts || 1), 0);
+const secTime = sec => S.answers.reduce((s, a, i) => s + (a && QS[i].sec === sec ? a.spent : 0), 0);
+const elapsed = () => S.start ? (S.end || Date.now()) - S.start : 0;
+
+// ---------- шапка и таймер ----------
+let timerEl = null;
+setInterval(() => { if (timerEl) timerEl.textContent = '⏱ ' + fmt(elapsed()); }, 500);
+function header(sec) {
+  const hd = h('header');
+  hd.append(h('span', { className: 'chip', textContent: SEC[sec] }), h('span', { className: 'grow' }));
+  hd.append(h('span', { className: 'stat', textContent: `Вопрос ${S.idx + 1} / ${QS.length}` }));
+  // Во время теста баллы скрыты, чтобы нельзя было догадаться о правильности ответа
+  hd.append(h('span', { className: 'stat', textContent: '★ ?' }));
+  timerEl = h('span', { className: 'stat', textContent: '⏱ ' + fmt(elapsed()) });
+  hd.append(timerEl);
+  const pr = h('div', { className: 'progress' }); pr.append(h('div', { style: `width:${S.idx / QS.length * 100}%` }));
+  return [hd, pr];
+}
+
+// ---------- экраны ----------
+function render() {
+  app.innerHTML = ''; timerEl = null;
+  if (!S.start) return startScreen();
+  if (S.end) return resultScreen();
+  const q = QS[S.idx];
+  if (!S.intro[q.sec]) return introScreen(q.sec);
+  questionScreen(q);
+}
+
+function startScreen() {
+  const c = h('div', { className: 'card' });
+  c.innerHTML = `<h1>Большое повторение</h1>
+    <p>Три раунда: <b>Изображения</b>, <b>Видео</b> и <b>Текст</b>. Всего ${QS.length} вопросов и ${MAX} баллов.</p>
+    <ul>
+      <li><b>Важно:</b> После ответа система покажет только «Ответ принят». Верно или нет — станет известно <b>только в конце</b>, в разделе «Разбор».</li>
+      <li>Счётчик баллов в шапке во время теста скрыт (★ ?), чтобы не подсказывать правильность.</li>
+      <li>Есть задачи на расчёт, сборку кода и ползунки. Бумага и калькулятор разрешены, нейросети — нет.</li>
+      <li>Если случайно закрыли вкладку, откройте файл снова в том же браузере: тест продолжится.</li>
+    </ul>
+    <p><b>Фамилия и имя:</b></p>`;
+  const inp = h('input', { className: 'name', placeholder: 'Иванов Иван' });
+  const go = h('button', { className: 'btn primary', textContent: 'Начать ▶', disabled: true });
+  inp.oninput = () => go.disabled = inp.value.trim().length < 3;
+  inp.onkeydown = e => { if (e.key === 'Enter' && !go.disabled) go.click(); };
+  go.onclick = () => { S.name = inp.value.trim(); S.start = Date.now(); save(); render(); };
+  const a = h('div', { className: 'actions' }); a.append(go);
+  c.append(inp, a);
+  app.append(c); inp.focus();
+}
+
+function introScreen(sec) {
+  const n = QS.filter(q => q.sec === sec).length, k = SEC_KEYS.indexOf(sec) + 1;
+  const c = h('div', { className: 'card' });
+  c.innerHTML = `<p class="muted">Раунд ${k} из ${SEC_KEYS.length}</p><h1>${SEC[sec]}</h1><p>${n} вопросов, ${maxOf(sec)} баллов.</p>`;
+  // Баллы между раундами тоже скрыты
+  if (k > 1) c.innerHTML += `<p>Прошло времени: <b>${fmt(elapsed())}</b>. Баллы и правильность ответов — в конце теста.</p>`;
+  const b = h('button', { className: 'btn primary', textContent: 'Поехали ▶' });
+  b.onclick = () => { S.intro[sec] = true; save(); render(); };
+  const a = h('div', { className: 'actions' }); a.append(b); c.append(a);
+  app.append(...header(sec), c); b.focus();
+}
+
+function questionScreen(q) {
+  if (!S.shownAt[S.idx]) { S.shownAt[S.idx] = Date.now(); save(); }
+  const c = h('div', { className: 'card' });
+  const kind = { choice: 'Выбор', num: 'Расчёт', order: 'Конструктор кода', slider: 'Подбери параметр' }[q.type];
+  c.append(h('p', { className: 'muted', style: 'margin:0 0 6px;font-weight:700' }, `${kind} · ${q.pts || 1} ${(q.pts || 1) === 1 ? 'балл' : 'балла'}`));
+  c.append(h('h2', {}, md(q.text)));
+  if (q.code) c.append(h('pre', { className: 'code', textContent: q.code }));
+  const body = h('div'); c.append(body);
+  const w = WIDGETS[q.type === 'slider' ? q.widget : q.type](q, body);
+  if (q.hint) {
+    const hb = h('button', { className: 'btn', textContent: '💡 Подсказка' });
+    hb.onclick = () => { hb.replaceWith(h('div', { className: 'hint' }, md(q.hint))); };
+    body.append(h('div', { style: 'margin-top:12px' })); body.lastChild.append(hb);
+  }
+  const check = h('button', { className: 'btn primary', textContent: 'Проверить' });
+  const next = h('button', { className: 'btn primary', textContent: S.idx === QS.length - 1 ? 'К результатам ▶' : 'Дальше ▶', style: 'display:none' });
+  const fb = h('div');
+  const done = S.answers[S.idx];
+
+  // ИЗМЕНЕНИЕ: не показываем верно/неверно — только факт приёма ответа
+  const finish = () => {
+    c.classList.add('lock');
+    if (w.lock) w.lock();
+    check.style.display = 'none';
+    next.style.display = '';
+    fb.className = 'fb neutral';
+    fb.innerHTML = '✔ <b>Ответ принят.</b> Разбор будет доступен в конце теста.';
+    next.focus();
+  };
+
+  check.onclick = () => {
+    if (!w.ready()) { fb.className = 'fb neutral'; fb.textContent = 'Сначала дайте ответ.'; return; }
+    const ok = !!w.check();
+    S.answers[S.idx] = { ok, spent: Date.now() - S.shownAt[S.idx], given: w.given ? w.given() : '' };
+    save(); finish();
+  };
+  next.onclick = () => {
+    S.idx++;
+    if (S.idx >= QS.length) { S.idx = QS.length - 1; S.end = Date.now(); }
+    save(); render(); scrollTo(0, 0);
+  };
+  const a = h('div', { className: 'actions' }); a.append(check, next); c.append(a, fb);
+  const hdr = header(q.sec);
+  app.append(...hdr, c);
+  if (done) finish();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.target.matches('input.name, textarea')) return;
+  const btn = [...app.querySelectorAll('.actions .btn.primary')].find(b => b.style.display !== 'none' && !b.disabled);
+  if (btn && document.activeElement !== btn) { e.preventDefault(); btn.click(); }
+});
+
+function resultScreen() {
+  const total = score(), time = fmt(elapsed());
+  const secs = SEC_KEYS.map(k => ({ k, s: score(q => q.sec === k), m: maxOf(k), t: fmt(secTime(k)) }));
+  const date = new Date(S.end).toLocaleDateString('ru-RU');
+  const body = `ML-ПОВТОРЕНИЕ v3 | ${S.name} | ${total}/${MAX} | ${time} | ` + secs.map(x => `${SEC[x.k].split(' ')[1][0]} ${x.s}/${x.m}`).join(' ') + ` | попытка ${S.attempt} | ${date}`;
+  const code = body + ' | #' + hash(body);
+  const c = h('div', { className: 'card' });
+  c.innerHTML = `<p class="muted">${esc(S.name)}</p><h1>Готово!</h1>
+    <div class="big">${total} / ${MAX}</div>
+    <p>Это <b>${Math.round(total / MAX * 100)}%</b> за <b>${time}</b>.</p>
+    <div class="secgrid">${secs.map(x => `<div>${SEC[x.k]}<br>${x.s} / ${x.m}<br><span class="muted">${x.t}</span></div>`).join('')}</div>
+    <p><b>Код результата.</b> Скопируйте его целиком и отправьте преподавателю в LXP:</p>
+    <div class="codebox" id="code">${esc(code)}</div>`;
+  const cp = h('button', { className: 'btn primary', textContent: '📋 Скопировать код' });
+  cp.onclick = () => { navigator.clipboard.writeText(code).then(() => cp.textContent = '✅ Скопировано', () => { getSelection().selectAllChildren(document.getElementById('code')); cp.textContent = 'Выделено: нажмите Ctrl+C'; }); };
+  const again = h('button', { className: 'btn', textContent: 'Пройти заново' });
+  again.onclick = () => { if (confirm('Начать заново? Текущий результат пропадёт, номер попытки увеличится.')) { S = fresh(S.attempt + 1); save(); render(); } };
+  const a = h('div', { className: 'actions' }); a.append(cp, again); c.append(a);
+
+  // РАЗБОР С ПРАВИЛЬНЫМИ ОТВЕТАМИ — ПОКАЗЫВАЕТСЯ ТОЛЬКО ЗДЕСЬ, В КОНЦЕ
+  const rv = h('div', { className: 'card', style: 'margin-top:20px' }, '<h2>📝 Полный разбор заданий</h2>');
+  QS.forEach((q, i) => {
+    const ans = S.answers[i] || { ok: false, spent: 0 };
+    const d = h('div', { className: 'rev' + (ans.ok ? '' : ' no') });
+    const correctText = !ans.ok && wAnswer(q) ? `<br><b>Правильный ответ:</b> ${wAnswer(q)}` : '';
+    d.innerHTML = `<p><b>${i + 1}. ${ans.ok ? '✅' : '❌'}</b> ${md(q.text)} <span class="muted">(${fmt(ans.spent)})</span></p>
+                   <p class="muted">${md(q.explain)}${correctText}</p>`;
+    rv.append(d);
+  });
+  app.append(c, rv);
+}
+
+// Вспомогательная функция: текст правильного ответа для финального разбора
+function wAnswer(q) {
+  if (q.type === 'num') return `<b>${String(q.answer).replace('.', ',')}</b>${q.unit ? ' ' + q.unit : ''}`;
+  if (q.type === 'choice') return md(q.options[q.correct]);
+  if (q.type === 'order') return '<pre class="code">' + esc(q.accept[0].map(i => q.lines[i]).join('\n')) + '</pre>';
+  if (q.type === 'slider') return 'см. объяснение выше';
+  return null;
+}
+
+// ---------- виджеты ----------
+const WIDGETS = {};
+
+WIDGETS.choice = (q, el) => {
+  let sel = S.answers[S.idx] ? S.answers[S.idx].given : -1;
+  const btns = q.options.map((o, i) => {
+    const b = h('button', { className: 'opt' + (i === sel ? ' sel' : '') }, md(o));
+    b.onclick = () => { sel = i; btns.forEach((x, j) => x.classList.toggle('sel', j === i)); };
+    el.append(b); return b;
+  });
+  return {
+    ready: () => sel >= 0, check: () => sel === q.correct, given: () => sel,
+    // ИЗМЕНЕНИЕ: не подсвечиваем правильный/неправильный вариант
+    lock: () => {},
+  };
+};
+
+WIDGETS.num = (q, el) => {
+  const prev = S.answers[S.idx];
+  const inp = h('input', { className: 'num', placeholder: 'ответ', value: prev ? prev.given : '' });
+  const r = h('div', { className: 'row' }); r.append(inp); if (q.unit) r.append(h('span', { textContent: q.unit, style: 'font-weight:700' }));
+  el.append(r); setTimeout(() => inp.focus(), 0);
+  const val = () => parseFloat(inp.value.replace(/\s/g, '').replace(',', '.'));
+  return {
+    ready: () => !isNaN(val()), given: () => inp.value,
+    check: () => Math.abs(val() - q.answer) <= (q.tol || 0) + 1e-9,
+    lock: () => { inp.disabled = true; },
+  };
+};
+
+WIDGETS.order = (q, el) => {
+  const all = q.lines.map((t, i) => ({ t, id: i })).concat((q.extra || []).map((t, i) => ({ t, id: 100 + i })));
+  const pool = shuffle(all, 7 + S.idx * 13);
+  let chosen = [];
+  el.append(h('div', { className: 'ord-label', textContent: 'Ваш код (нажмите строку, чтобы убрать):' }));
+  const box = h('div', { className: 'ord-box' }); el.append(box);
+  el.append(h('div', { className: 'ord-label', textContent: 'Строки (нажимайте по порядку):' }));
+  const src = h('div'); el.append(src);
+  const reset = h('button', { className: 'btn', textContent: '↺ Сбросить', style: 'margin-top:10px' });
+  reset.onclick = () => { chosen = []; draw(); }; el.append(reset);
+  function draw() {
+    box.innerHTML = ''; src.innerHTML = '';
+    chosen.forEach((it, k) => {
+      const b = h('button', { className: 'ord-line' }); b.append(h('span', { className: 'n', textContent: String(k + 1).padStart(2) }), document.createTextNode(it.t));
+      b.onclick = () => { chosen.splice(k, 1); draw(); }; box.append(b);
+    });
+    pool.filter(it => !chosen.includes(it)).forEach(it => {
+      const b = h('button', { className: 'ord-line', textContent: it.t });
+      b.onclick = () => { chosen.push(it); draw(); }; src.append(b);
+    });
+  }
+  draw();
+  return {
+    ready: () => chosen.length > 0, given: () => chosen.map(c => c.id).join(','),
+    check: () => q.accept.some(seq => seq.length === chosen.length && seq.every((v, i) => v === chosen[i].id)),
+    lock: () => { reset.disabled = true; },
+  };
+};
+
+function slider(el, label, min, max, step, value, fmtv = v => v) {
+  const lab = h('label', { className: 'ctl' }); const b = h('b', { textContent: fmtv(value) });
+  const r = h('input', { type: 'range', min, max, step, value });
+  lab.append(document.createTextNode(label + ': '), b, r); el.append(lab);
+  r.addEventListener('input', () => b.textContent = fmtv(+r.value));
+  return r;
+}
+
+WIDGETS.padding = (q, el) => {
+  const r = slider(el, 'padding', 0, 5, 1, 0);
+  el.append(h('div', { className: 'formula', textContent: 'выход = ⌊(вход + 2·padding − kernel_size) / stride⌋ + 1' }));
+  const out = p => Math.floor((30 + 2 * p - 4) / 2) + 1;
+  return { ready: () => true, check: () => out(+r.value) === 15, given: () => r.value, lock: () => r.disabled = true };
+};
+
+WIDGETS.threshold = (q, el) => {
+  const N = 70, img = new Uint8Array(N * N), rnd = rng(42);
+  for (let i = 0; i < N * N; i++) img[i] = 50 + Math.floor(rnd() * 41);
+  const put = (x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && xx < N && yy >= 0 && yy < N) img[yy * N + xx] = 160 + Math.floor(rnd() * 46); } };
+  for (let x = 18; x <= 52; x++) put(x, 14);
+  for (let t = 0; t <= 1; t += 0.01) put(Math.round(52 - 22 * t), Math.round(14 + 44 * t));
+  const row = h('div', { className: 'canv-row' });
+  const c1 = h('canvas', { width: N * 3, height: N * 3 }), c2 = h('canvas', { width: N * 3, height: N * 3 });
+  const col = (t, cv) => { const w = h('div'); w.append(h('p', { textContent: t, style: 'margin:0 0 4px;font-weight:700' }), cv); return w; };
+  row.append(col('Исходная', c1), col('Пиксели ярче порога → белые', c2)); el.append(row);
+  const r = slider(el, 'Порог', 0, 255, 1, 60);
+  const paint = (cv, f) => {
+    const ctx = cv.getContext('2d'), d = ctx.createImageData(N, N);
+    for (let i = 0; i < N * N; i++) { const v = f(img[i]); d.data.set([v, v, v, 255], i * 4); }
+    const tmp = h('canvas', { width: N, height: N }); tmp.getContext('2d').putImageData(d, 0, 0);
+    ctx.imageSmoothingEnabled = false; ctx.drawImage(tmp, 0, 0, N * 3, N * 3);
+  };
+  paint(c1, v => v);
+  const draw = () => paint(c2, v => v > +r.value ? 255 : 0);
+  r.addEventListener('input', draw); draw();
+  return { ready: () => true, check: () => +r.value >= 100 && +r.value <= 150, given: () => r.value, lock: () => r.disabled = true };
+};
+
+WIDGETS.lr = (q, el) => {
+  const cv = h('canvas', { width: 640, height: 260 }); el.append(cv);
+  const r = slider(el, 'learning rate', -5, 0, 0.1, -4, v => (10 ** v).toPrecision(2));
+  const curve = lr => { const a = lr * 100, k = 1 - 2 * a; return Array.from({ length: 21 }, (_, t) => (k ** (2 * t))); };
+  const draw = () => {
+    const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, L = curve(10 ** +r.value);
+    ctx.clearRect(0, 0, W, H); ctx.font = '14px Segoe UI'; ctx.fillStyle = '#6b6680';
+    const y = v => H - 30 - Math.min(v, 1.5) / 1.5 * (H - 50);
+    ctx.strokeStyle = '#ddd'; ctx.beginPath(); ctx.moveTo(40, y(0.01)); ctx.lineTo(W - 10, y(0.01)); ctx.stroke();
+    ctx.fillText('0,01', 4, y(0.01) + 4); ctx.fillText('1', 18, y(1) + 4); ctx.fillText('эпоха →', W - 70, H - 8); ctx.fillText('loss', 4, 16);
+    ctx.strokeStyle = '#4d96ff'; ctx.lineWidth = 3; ctx.beginPath();
+    L.forEach((v, t) => { const x = 40 + t * (W - 60) / 20; t ? ctx.lineTo(x, y(v)) : ctx.moveTo(x, y(v)); }); ctx.stroke();
+    ctx.lineWidth = 1;
+  };
+  r.addEventListener('input', draw); draw();
+  return {
+    ready: () => true, given: () => r.value, lock: () => r.disabled = true,
+    check: () => { const lr = 10 ** +r.value; return Math.abs(lr - 0.05) < 0.01; },
+  };
+};
+
+WIDGETS.hsv = (q, el) => {
+  const shapes = [0, 30, 60, 90, 120, 150];
+  const names = ['красный', 'жёлтый', 'зелёный', 'голубой', 'синий', 'фиолетовый'];
+  const cv = h('canvas', { width: 660, height: 260 }); el.append(cv);
+  const lo = slider(el, 'Нижняя граница H', 0, 179, 1, 100), hi = slider(el, 'Верхняя граница H', 0, 179, 1, 130);
+  const draw = () => {
+    const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, 660, 260); ctx.font = '13px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#1f1b2e'; ctx.fillText('кадр', 330, 16); ctx.fillText('маска: H от ' + lo.value + ' до ' + hi.value, 330, 146);
+    shapes.forEach((hh, i) => {
+      const x = 20 + i * 108, inR = hh >= +lo.value && hh <= +hi.value;
+      ctx.fillStyle = `hsl(${hh * 2}, 85%, 50%)`;
+      if (i % 2) { ctx.beginPath(); ctx.arc(x + 45, 70, 40, 0, 7); ctx.fill(); } else ctx.fillRect(x + 5, 30, 80, 80);
+      ctx.fillStyle = '#000'; ctx.fillRect(x, 156, 90, 90);
+      if (inR) { ctx.fillStyle = '#fff'; if (i % 2) { ctx.beginPath(); ctx.arc(x + 45, 201, 38, 0, 7); ctx.fill(); } else ctx.fillRect(x + 7, 163, 76, 76); }
+      ctx.fillStyle = '#6b6680'; ctx.fillText(names[i], x + 45, 126);
+    });
+  };
+  lo.addEventListener('input', draw); hi.addEventListener('input', draw); draw();
+  return {
+    ready: () => true, given: () => lo.value + '-' + hi.value, lock: () => { lo.disabled = hi.disabled = true; },
+    check: () => { const a = +lo.value, b = +hi.value; return shapes.every(s => (s >= a && s <= b) === (s === 120)); },
+  };
+};
+
+WIDGETS.haar = (q, el) => {
+  const cv = h('canvas', { width: 640, height: 300 }); el.append(cv);
+  const r = slider(el, 'minNeighbors', 1, 10, 1, 5);
+  const faces = [[170, 140], [430, 130]];
+  const dets = [[130, 95, 80, 3], [390, 85, 80, 4], [40, 30, 50, 2], [520, 220, 60, 4], [270, 200, 55, 5]];
+  const draw = () => {
+    const ctx = cv.getContext('2d'); ctx.fillStyle = '#efe6d6'; ctx.fillRect(0, 0, 640, 300);
+    ctx.fillStyle = '#b8d4f0'; ctx.fillRect(20, 20, 140, 90); ctx.fillStyle = '#c9b79c'; ctx.fillRect(0, 250, 640, 50);
+    faces.forEach(([x, y]) => {
+      ctx.fillStyle = '#f2c9a0'; ctx.beginPath(); ctx.arc(x, y, 34, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1f1b2e'; ctx.beginPath(); ctx.arc(x - 12, y - 8, 4, 0, 7); ctx.arc(x + 12, y - 8, 4, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#1f1b2e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y + 6, 14, 0.2, Math.PI - 0.2); ctx.stroke();
+      ctx.fillStyle = '#8a7fb0'; ctx.fillRect(x - 40, y + 40, 80, 70);
+    });
+    ctx.lineWidth = 4; ctx.strokeStyle = '#ff3b8d';
+    dets.filter(d => d[3] >= +r.value).forEach(([x, y, s]) => ctx.strokeRect(x, y, s, s));
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#1f1b2e'; ctx.font = 'bold 16px Segoe UI'; ctx.fillText('Найдено: ' + dets.filter(d => d[3] >= +r.value).length, 500, 24);
+  };
+  r.addEventListener('input', draw); draw();
+  return { ready: () => true, check: () => +r.value === 5, given: () => r.value, lock: () => r.disabled = true };
+};
+
+WIDGETS.temp = (q, el) => {
+  const words = [['же', 6], ['ты', 3], ['дела', 1]];
+  const box = h('div'); el.append(box);
+  const r = slider(el, 'Температура', 0.1, 3, 0.05, 1.0, v => v.toFixed(2));
+  const probs = t => { const p = words.map(([, c]) => c ** (1 / t)), s = p.reduce((a, b) => a + b, 0); return p.map(x => x / s); };
+  const draw = () => {
+    const p = probs(+r.value);
+    box.innerHTML = words.map(([w], i) => `<div style="display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:8px 0;font-weight:700;font-size:18px"><span>как ${w}</span><div style="height:28px;width:${Math.max(1, p[i] * 100)}%;background:#4d96ff;border:2px solid #1f1b2e;border-radius:6px"></div></div>`).join('')
+      + '<p class="muted" style="font-size:15px">Длина полоски — вероятность слова. Вся ширина = 100%.</p>';
+  };
+  r.addEventListener('input', draw); draw();
+  return { ready: () => true, check: () => { const p = probs(+r.value)[0]; return p >= 0.30 && p <= 0.40; }, given: () => r.value, lock: () => r.disabled = true };
+};
+
+render();
+</script>
+</body>
+</html>
